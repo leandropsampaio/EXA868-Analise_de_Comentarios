@@ -1,0 +1,28 @@
+Problema dos Comentários
+
+Pesquisar:
+	bag of words (converter texto em array numerico)
+	Olhar o site da disciplina para descrição
+
+obtenção de dados:
+	Comentário Steam
+	Submarino
+	Mercado Livre
+
+Bot de Mineração ou Manual?
+TF-IDF?
+
+Etapas de desenvolvimento:
+	Remover palavras desnecessárias do texto (stepwords)
+	Criar o bag of words
+
+Ideias:
+	Transformar palavras em hash
+
+https://blog.hartleybrody.com/scrape-amazon/
+https://stackoverflow.com/questions/40311617/how-to-scrape-amazon-using-python-3
+https://www.scrapehero.com/how-to-scrape-amazon-product-reviews/
+https://www.google.com.br/search?q=amazon+python+web+scraping&rlz=1C1AVFC_enBR737BR737&oq=python+amazon+web+s&aqs=chrome.2.69i57j0l5.6853j0j7&sourceid=chrome&ie=UTF-8
+https://www.youtube.com/watch?v=BN1WwnEDWAM&index=10&list=RDhXl3DAD2kU0
+https://www.youtube.com/watch?v=kijpcUv-b8M&index=17&list=RDMMSBjQ9tuuTJQ
+https://www.youtube.com/watch?v=UKU4B05fPck&list=RDUKU4B05fPck

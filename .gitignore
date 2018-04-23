@@ -1,0 +1,9 @@
+#files
+
+*.sqlite3
+*.so
+*.pyc
+
+#enviroment
+
+src/venv

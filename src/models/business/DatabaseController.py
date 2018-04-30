@@ -8,7 +8,7 @@ class DatabaseController:
         self.__connection = sqlite3.connect('../reviews_database.db')
 
         self.__connection.execute(
-            'CREATE TABLE IF NOT EXISTS Reviews(review_id integer not null, comment varchar(250), rating real, PRIMARY KEY(review_id))')
+            'CREATE TABLE IF NOT EXISTS Reviews(review_id integer not null, comment varchar(450), rating real, PRIMARY KEY(review_id))')
         self.__connection.commit()
 
     def insert_reviews(self, review_list):
@@ -21,5 +21,11 @@ class DatabaseController:
             elif (type(tuples[0]) == "float"):
                 floater = float(tuples[0])
 
-            self.__connection.execute("INSERT INTO Reviews(comment, rating) VALUES('%s', %f)" % (tuples[1], floater))
-            self.__connection.commit()
+            try:
+                self.__connection.execute("INSERT INTO Reviews(comment, rating) VALUES('%s', %f)" % (tuples[1], floater))
+                self.__connection.commit()
+            except sqlite3.OperationalError as error:
+                print(error)
+
+    def get_reviews(self):
+        return self.__connection.execute("SELECT comment, rating FROM Reviews").fetchall()

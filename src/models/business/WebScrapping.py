@@ -42,7 +42,7 @@ class WebScrapping:
                 print("Type error({0})".format(error))
         self.__scrapeResults = temporary_result_list
 
-    def scrap_div(self):
+    def __scrap_div(self):
 
         for value in self.__soup.find('div', class_='a-section a-spacing-none review-views celwidget'):
             self.__scrapeResults.append(value)
@@ -67,12 +67,12 @@ class WebScrapping:
                 if file.endswith(".html"):
                     with open(os.path.join(file_directory, file), 'r') as content_file:
                         self.__soup = BeautifulSoup(content_file.read(), "html.parser")
-                    self.scrap_div()
+                    self.__scrap_div()
 
         elif not from_file:
             self.set_url(first_url)
             self.__get_page()
             while self.have_next_page():
                 self.__currentCommentPage += 1
-                self.scrap_div()
+                self.__scrap_div()
                 self.__get_page()

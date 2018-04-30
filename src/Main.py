@@ -1,7 +1,26 @@
-from models.business.WebScrapping import WebScrapping
+import json
+import os
+import time
 
-webscrapping = WebScrapping()
-url = "https://www.amazon.com.br/Trilogia-dos-Espinhos-Mark-Lawrence/product-reviews/8594540256/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews"
-webscrapping.set_url(url)
-#webscrapping.scrap_div(True, "../scrape_pages/Amazon/Trilogia_dos_Espinhos_1.html")
-webscrapping.automatic_scrape(True, "../scrape_pages/Amazon/")
+from models.business.WebScrapping import WebScrapping
+from models.business.BagOfWords import BagOfWords
+
+file_directory = "./"
+all_urls = None
+for file in os.listdir(file_directory):
+    if file.endswith(".json"):
+        with open(os.path.join(file_directory, file), 'r') as content_file:
+            all_urls = json.loads(content_file.read())
+
+''' count = 0
+for url in all_urls['pages']:
+    print(url)
+    if count <= 7:
+        count += 1
+        continue
+    webscrapping = WebScrapping()
+    webscrapping.automatic_scrape(False, "../scrape_pages/Amazon/", url)
+    time.sleep(20) '''
+
+bg = BagOfWords()
+bg.main_execution()

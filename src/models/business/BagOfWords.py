@@ -1,8 +1,13 @@
+import re
+
 import nltk
+
+from unicodedata import normalize
+from models.business.DatabaseController import DatabaseController
+
+
 # nltk.download("stopwords")
 # nltk.download("rslp")
-
-from models.business.DatabaseController import DatabaseController
 
 
 class BagOfWords:
@@ -11,17 +16,34 @@ class BagOfWords:
         # Base de dados com as frases
         self.base = DatabaseController().get_reviews()
         self.palavrasUnicas = None
+        self.__frequencia = None
         # --------------------------------------- Remoção de stop words ------------------------------------------------
         # Pegando as palavras (stopwords) da biblioteca
         self.stopwordsnltk = nltk.corpus.stopwords.words('portuguese')
+        self.stopwordsnltk.append("é")
+
+    def __remover_acentos(self, txt):
+        return normalize('NFKD', txt).encode('ASCII', 'ignore').decode('ASCII')
+
+    def __removerCaracteresEspeciais(self, frase):
+        cleaner = re.compile('<.*?>')
+        clean_text = re.sub(cleaner, '', frase)
+
+        lista_remocao = ["\?+", "!+", "\.+", ",+", "\(+", "\)+"]
+
+        for pattern in lista_remocao:
+            cleaner = re.compile(pattern)
+            clean_text = re.sub(cleaner, "", clean_text)
+        return clean_text
 
     # Método para pecorrer todas as palavras da base de dados e remover as stopwords
     def removeStopWord(self, texto):
         frases = []
 
-        for (palavras, emocao) in texto:
-            semStop = [p for p in palavras.split() if p not in self.stopwordsnltk]
-            frases.append((semStop, emocao))
+        for palavras, emocao in texto:
+            semStop = [p for p in self.__removerCaracteresEspeciais(self.__remover_acentos(palavras.lower())).split() if
+                       p not in self.stopwordsnltk]
+            frases.append((" ".join(str(x) for x in semStop), emocao))
         return frases
 
     # ------------------------------- Extração do radical das palavras (stemming) --------------------------------------
@@ -31,7 +53,7 @@ class BagOfWords:
         stemmer = nltk.stem.RSLPStemmer()
         frasesStemming = []
 
-        for (palavras, emocao) in texto:
+        for palavras, emocao in texto:
             comStemming = [str(stemmer.stem(p)) for p in palavras.split() if p not in self.stopwordsnltk]
             frasesStemming.append((comStemming, emocao))
         return frasesStemming
@@ -63,27 +85,30 @@ class BagOfWords:
 
     def extratorPalavras(self, documento):
         caracteristicas = {}
+        frequencia = self.buscaFrequencia(documento)
         for palavras in self.palavrasUnicas:
-            caracteristicas[palavras] = palavras in documento
+            if palavras in documento:
+                caracteristicas[palavras] = frequencia[palavras]
+            else:
+                caracteristicas[palavras] = 0
         return caracteristicas
 
     def main_execution(self):
         # Imprimindo as palavras sem a raiz e sem as stopwords
-        frasesComStemming = self.aplicaStemmer(self.base)
+        frasesComStemming = self.aplicaStemmer(self.removeStopWord(self.base))
         # print(frasesComStemming)
 
         # Imprimindo todas as palavras das frases, sem a emoção
         palavras = self.buscaPalavras(frasesComStemming)
         # print(palavras)
 
-        frequencia = self.buscaFrequencia(palavras)
+        self.__frequencia = self.buscaFrequencia(palavras)
         # Mostra a quantidade de vezes que a palavra apareceu, junto com a palavra
-        print(frequencia.most_common(50))
+        # print(self.__frequencia.most_common(50))
 
-        self.palavrasUnicas = self.buscaPalavrasUnicas(frequencia)
+        self.palavrasUnicas = self.buscaPalavrasUnicas(self.__frequencia)
         # Imprime na tela as palavras sem repetição ou seja apenas uma vez cada palavra
-        print(self.palavrasUnicas)
+        # print(self.palavrasUnicas)
 
         baseCompleta = nltk.classify.apply_features(self.extratorPalavras, frasesComStemming)
-
         print(baseCompleta)

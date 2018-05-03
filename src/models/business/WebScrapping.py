@@ -1,7 +1,9 @@
-import requests
 import os
+import re
+import requests
 from bs4 import BeautifulSoup
 
+from models.business.ProxyScrapper import ProxyScrapper
 from models.business.DatabaseController import DatabaseController
 
 
@@ -18,13 +20,23 @@ class WebScrapping:
         self.__soup = None
         self.__scrapeResults = []
         self.__database = DatabaseController()
+        self.__proxy_scrapper = ProxyScrapper()
+        self.__proxy_scrapper.run()
+        self.__proxy_pool = self.__proxy_scrapper.get_proxy_pool()
 
     def set_url(self, url):
         self.__url = url
 
     def __get_page(self):
-        response = requests.get(("%s&pageNumber=%d" % (self.__url, self.__currentCommentPage)), headers=self.__headers)
+        proxy = next(self.__proxy_pool)
+        response = requests.get(("%s&pageNumber=%d" % (self.__url, self.__currentCommentPage)), headers=self.__headers,
+                                proxies={"http": proxy, "https": proxy})
         self.__soup = BeautifulSoup(response.text, "html.parser")
+
+    def __remove_tags(self, string_with_tag):
+        cleaner = re.compile('<.*?>')
+        clean_text = re.sub(cleaner, '', string_with_tag)
+        return clean_text
 
     def __more_deep_scrape(self):
         temporary_result_list = []
@@ -37,7 +49,7 @@ class WebScrapping:
                     temporary_rating = rating
                 for onlyComment in temporary_soup.find('span', class_='a-size-base review-text'):
                     temporary_string += str(onlyComment)
-                temporary_result_list.append((str(temporary_rating), temporary_string))
+                temporary_result_list.append((str(temporary_rating), self.__remove_tags(temporary_string)))
             except TypeError as error:
                 print("Type error({0})".format(error))
         self.__scrapeResults = temporary_result_list
@@ -52,13 +64,17 @@ class WebScrapping:
 
     def have_next_page(self):
         print("Entering have next")
-        for value in self.__soup.find('ul', class_='a-pagination'):
-            try:
-                verify = int(value.text)
-                if self.__currentCommentPage < verify:
-                    return True
-            except ValueError as error:
-                print(error)
+        try:
+            for value in self.__soup.find('ul', class_='a-pagination'):
+                try:
+                    verify = int(value.text)
+                    if self.__currentCommentPage < verify:
+                        return True
+                except ValueError as error:
+                    print(error)
+        except TypeError as error:
+            print(error)
+            print(self.__soup)
         return False
 
     def automatic_scrape(self, from_file=False, file_directory=None, first_url=""):
@@ -72,7 +88,16 @@ class WebScrapping:
         elif not from_file:
             self.set_url(first_url)
             self.__get_page()
+
             while self.have_next_page():
                 self.__currentCommentPage += 1
                 self.__scrap_div()
-                self.__get_page()
+                try:
+                    self.__get_page()
+                except:
+                    '''
+                    Most free proxies will often get connection errors. You will have retry the entire request using
+                    another proxy to work. We will just skip retries as its beyond the scope of this tutorial and
+                    we are only downloading a single url
+                    '''
+                    print("Skipping. Connection error")

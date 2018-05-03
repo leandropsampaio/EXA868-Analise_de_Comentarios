@@ -1,6 +1,6 @@
-from sklearn.neural_network import MLPClassifier
+import pybrain.tools.datasettools
 
 
 class NeuralNetwork:
     def __init__(self):
-        self.__nn = MLPClassifier()
+        self.__nn = None

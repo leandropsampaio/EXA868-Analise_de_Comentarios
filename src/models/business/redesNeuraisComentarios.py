@@ -18,8 +18,8 @@ quantPalavrasUnicas = 2
 # ************** PASSAR A QUANTIDADE DE COMENTARIOS ********************** 
 quantComentarios = 2
 
-# Construcao da rede com quantPalavrasUnicas na entradas, 3 camadas ocultas e 1 sai­da
-rede = buildNetwork(quantPalavrasUnicas, 3, 1)
+# Construcao da rede com quantPalavrasUnicas na entradas, 1400 camadas ocultas e 1 sai­da
+rede = buildNetwork(quantPalavrasUnicas, 1400, 1)
 # Base de dados com quantPalavrasUnicas atributos previsores e uma clase
 base = SupervisedDataSet(quantPalavrasUnicas, 1)
 

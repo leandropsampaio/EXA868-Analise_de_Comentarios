@@ -8,3 +8,5 @@ from controllers.NetworkTraninigController import NetworkTrainingController
 
 nnc = NetworkTrainingController()
 nnc.create_neural_network()
+nnc.start_training()
+nnc.test_neural_network()

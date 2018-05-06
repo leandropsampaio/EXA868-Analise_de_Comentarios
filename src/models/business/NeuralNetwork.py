@@ -16,7 +16,7 @@ class NeuralNetwork:
         self.__unique_words = unique_words
         self.__total_comments = total_comments
 
-        unique_words_length = 2# len(self.__unique_words)
+        unique_words_length = 2  # len(self.__unique_words)
         # Construcao da rede com quantPalavrasUnicas na entradas, 1400 camadas ocultas e 1 sai­da
         self.__network = buildNetwork(unique_words_length, 2, 1)
         # Base de dados com quantPalavrasUnicas atributos previsores e uma clase
@@ -48,8 +48,9 @@ class NeuralNetwork:
 
             for key in entry_array.keys():
                 # Adicionando o comentário na base
-                print((self.__convert_string_to_number(key), entry_array[key]))
-                self.__base.addSample((self.__convert_string_to_number(key), entry_array[key]), comment_class)
+                if entry_array[key] > 3:
+                    print((self.__convert_string_to_number(key), entry_array[key]))
+                    self.__base.addSample((self.__convert_string_to_number(key), entry_array[key]), comment_class)
 
         # Imprimir a entrada e a classe supervisionada
         # print(base['input'])
@@ -66,9 +67,13 @@ class NeuralNetwork:
             if i % 1000 == 0:
                 print("Erro: %s" % error)
 
-    def test_network(self):
+    def test_network(self, test_base):
         # ************************** PARTE DOS TESTES ********************************
         # Testar as entradas e ver a saí­da da rede neural
 
         # ******************* PASSAR OS COMENTÁRIOS PARA O TESTE *********************
-        print(self.__network.activate([0, 0]))
+        for index in range(0, len(test_base)):
+            entry_array = test_base[index][0]
+
+            for key in entry_array.keys():
+                print(key, self.__network.activate([self.__convert_string_to_number(key), entry_array[key]]))

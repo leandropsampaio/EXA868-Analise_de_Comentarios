@@ -1,9 +1,7 @@
 import re
+from unicodedata import normalize
 
 import nltk
-
-from unicodedata import normalize
-from models.business.DatabaseController import DatabaseController
 
 
 # nltk.download("stopwords")
@@ -12,103 +10,104 @@ from models.business.DatabaseController import DatabaseController
 
 class BagOfWords:
 
-    def __init__(self):
+    def __init__(self, base):
         # Base de dados com as frases
-        self.base = DatabaseController().get_reviews()
-        self.palavrasUnicas = None
-        self.__frequencia = None
+        self.__base = base
+        self.__unique_words = None
+        self.__frequency = None
         # --------------------------------------- Remoção de stop words ------------------------------------------------
         # Pegando as palavras (stopwords) da biblioteca
         self.stopwordsnltk = nltk.corpus.stopwords.words('portuguese')
         self.stopwordsnltk.append("é")
 
-    def __remover_acentos(self, txt):
+    def __remove_accentuation(self, txt):
         return normalize('NFKD', txt).encode('ASCII', 'ignore').decode('ASCII')
 
-    def __removerCaracteresEspeciais(self, frase):
+    def __remove_special_characters(self, frase):
         cleaner = re.compile('<.*?>')
         clean_text = re.sub(cleaner, '', frase)
 
-        lista_remocao = ["\?+", "!+", "\.+", ",+", "\(+", "\)+"]
+        removal_list = ["\?+", "!+", "\.+", ",+", "\(+", "\)+"]
 
-        for pattern in lista_remocao:
+        for pattern in removal_list:
             cleaner = re.compile(pattern)
             clean_text = re.sub(cleaner, "", clean_text)
         return clean_text
 
     # Método para pecorrer todas as palavras da base de dados e remover as stopwords
-    def removeStopWord(self, texto):
-        frases = []
+    def __remove_stop_word(self, text):
+        phrases = []
 
-        for palavras, emocao in texto:
-            semStop = [p for p in self.__removerCaracteresEspeciais(self.__remover_acentos(palavras.lower())).split() if
-                       p not in self.stopwordsnltk]
-            frases.append((" ".join(str(x) for x in semStop), emocao))
-        return frases
+        for words, emotion in text:
+            without_stop = [p for p in
+                            self.__remove_special_characters(self.__remove_accentuation(words.lower())).split() if
+                            p not in self.stopwordsnltk]
+            phrases.append((" ".join(str(x) for x in without_stop), emotion))
+        return phrases
 
     # ------------------------------- Extração do radical das palavras (stemming) --------------------------------------
 
     # Remover a raiz das palavras, ficando apenas com o radical
-    def aplicaStemmer(self, texto):
+    def __apply_stemmer(self, texto):
         stemmer = nltk.stem.RSLPStemmer()
-        frasesStemming = []
+        stemming_phrases = []
 
-        for palavras, emocao in texto:
-            comStemming = [str(stemmer.stem(p)) for p in palavras.split() if p not in self.stopwordsnltk]
-            frasesStemming.append((comStemming, emocao))
-        return frasesStemming
+        for words, emotion in texto:
+            com_stemming = [str(stemmer.stem(p)) for p in words.split() if p not in self.stopwordsnltk]
+            stemming_phrases.append((com_stemming, emotion))
+        return stemming_phrases
 
     # ----------------------------------- Listagem de todas as palavras da base ----------------------------------------
 
     # Buscando todas as palavras, sem a emoção
-    def buscaPalavras(self, frase):
-        todasPalavras = []
+    def __search_words(self, phrase):
+        all_words = []
 
-        for (palavras, emocao) in frase:
-            todasPalavras.extend(palavras)
-        return todasPalavras
+        for (words, emocao) in phrase:
+            all_words.extend(words)
+        return all_words
 
     # ------------------------------------------ Extração de palavras únicas -------------------------------------------
 
     # Buscando a frequência das palavras
-    def buscaFrequencia(self, palavras):
+    def __search_frequency(self, words):
         # nltk.FreqDist(palavras) - Retorna a quantidade de vezes que a palavra apareceu
-        palavras = nltk.FreqDist(palavras)
-        return palavras
+        words = nltk.FreqDist(words)
+        return words
 
     # Através da quantidade de vezes e da palavra, esse método pega apenas as palavras ou seja as chaves da lista (Keys)
-    def buscaPalavrasUnicas(self, frequencia):
-        frequencia = frequencia.keys()
-        return frequencia
+    def __search_unique_words(self, frequency):
+        frequency = frequency.keys()
+        return frequency
 
     # -------------------------------------- Extração das palavras de cada frase ---------------------------------------
 
-    def extratorPalavras(self, documento):
-        caracteristicas = {}
-        frequencia = self.buscaFrequencia(documento)
-        for palavras in self.palavrasUnicas:
-            if palavras in documento:
-                caracteristicas[palavras] = frequencia[palavras]
+    def __words_extractor(self, document):
+        characteristics = {}
+        frequency = self.__search_frequency(document)
+        for words in self.__unique_words:
+            if words in document:
+                characteristics[words] = frequency[words]
             else:
-                caracteristicas[palavras] = 0
-        return caracteristicas
+                characteristics[words] = 0
+        return characteristics
 
     def main_execution(self):
         # Imprimindo as palavras sem a raiz e sem as stopwords
-        frasesComStemming = self.aplicaStemmer(self.removeStopWord(self.base))
-        # print(frasesComStemming)
+        stemming_words = self.__apply_stemmer(self.__remove_stop_word(self.__base))
 
-        # Imprimindo todas as palavras das frases, sem a emoção
-        palavras = self.buscaPalavras(frasesComStemming)
+        words = self.__search_words(stemming_words)
         # print(palavras)
 
-        self.__frequencia = self.buscaFrequencia(palavras)
+        self.__frequency = self.__search_frequency(words)
         # Mostra a quantidade de vezes que a palavra apareceu, junto com a palavra
-        # print(self.__frequencia.most_common(50))
 
-        self.palavrasUnicas = self.buscaPalavrasUnicas(self.__frequencia)
+        self.__unique_words = self.__search_unique_words(self.__frequency)
         # Imprime na tela as palavras sem repetição ou seja apenas uma vez cada palavra
-        # print(self.palavrasUnicas)
 
-        baseCompleta = nltk.classify.apply_features(self.extratorPalavras, frasesComStemming)
-        print(baseCompleta)
+        complete_base = nltk.classify.apply_features(self.__words_extractor, stemming_words)
+
+        return complete_base
+
+    def get_unique_words(self):
+        return self.__unique_words

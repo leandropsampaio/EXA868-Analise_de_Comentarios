@@ -1,8 +1,10 @@
-from models.business.BagOfWords import BagOfWords
+"""
 from controllers.ScrapeController import ScrapeController
+scrap = ScrapeController()
+scrap.scrape_now()
+"""
 
-bg = BagOfWords()
-bg.main_execution()
+from controllers.NetworkTraninigController import NetworkTrainingController
 
-scrp = ScrapeController()
-# scrp.scrape_now()
+nnc = NetworkTrainingController()
+nnc.create_neural_network()

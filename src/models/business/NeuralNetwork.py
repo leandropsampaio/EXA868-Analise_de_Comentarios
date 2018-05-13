@@ -1,9 +1,8 @@
 from pybrain3.datasets import SupervisedDataSet
 from pybrain3.supervised import BackpropTrainer
 from pybrain3.tools.shortcuts import buildNetwork
-
-from pybrain3.tools.xml.networkwriter import NetworkWriter
 from pybrain3.tools.xml.networkreader import NetworkReader
+from pybrain3.tools.xml.networkwriter import NetworkWriter
 
 
 # from pybrain.tools.customxml.networkwriter import NetworkWriter
@@ -20,7 +19,7 @@ class NeuralNetwork:
 
         unique_words_length = len(self.__unique_words)
         # Construcao da rede com quantPalavrasUnicas na entradas, 1000 camadas ocultas e 1 sai­da
-        self.__network = buildNetwork(unique_words_length, 200, 1)
+        self.__network = buildNetwork(unique_words_length, 400, 1)
         # Base de dados com quantPalavrasUnicas atributos prevzisores e uma clase
         self.__base = SupervisedDataSet(unique_words_length, 1)
         '''
@@ -32,13 +31,14 @@ class NeuralNetwork:
         print(self.__network['bias'])
         '''
 
-    def __convert_string_to_number(self, received_string):
-        converted_string = 1
-        count = 1
-        for character in received_string:
-            count += self.__conversion_rate
-            converted_string += (ord(character) * count)
-        return converted_string
+    @staticmethod
+    def float_round(number, close_to):
+        """import math
+        return math.isclose(float(number), close_to, abs_tol=0.45)"""
+        if float(number) >= 0.5:
+            return 0.99 == close_to
+        else:
+            return 0.01 == close_to
 
     def __add_training_set(self, training_base):
 
@@ -49,22 +49,18 @@ class NeuralNetwork:
                 array = []
                 # ********************** TROCAR PELO ARRAY DE ENTRADAS *******************
                 entry_array = training_base[index][0]
-                # ********************** TROCAR PELO CLASSE ******************************
-                comment_class = training_base[index][1]
 
-                # print(entry_array, comment_class)
+                if training_base[index][1] >= 3.5:
+                    comment_class = 0.99
+                else:
+                    comment_class = 0.01
+
+                    # print(entry_array, comment_class)
                 for key in entry_array:
                     # print (entry_array[key])
                     array.append(entry_array[key])
 
                 self.__base.addSample(array, comment_class)
-
-                # for key in entry_array.keys():
-                #    print("ENTRADA: " + str(entry_array[key]))
-                #    print("SAIDA: " + str(comment_class))
-                # Adicionando o comentário na base
-                # print((self.__convert_string_to_number(key), entry_array[key]))
-                #   self.__base.addSample((self.__convert_string_to_number(key), entry_array[key]), comment_class)
 
         # Imprimir a entrada e a classe supervisionada
         # print(base['input'])
@@ -72,33 +68,46 @@ class NeuralNetwork:
 
     def training_network(self, training_base, number_of_trainings=20):
 
+        print("Start Training")
         self.__add_training_set(training_base)
         training = BackpropTrainer(self.__network, dataset=self.__base, learningrate=0.01, momentum=0.06)
 
         # Fazer o treinamento number_of_trainings vezes e mostrar o erro
-        for i in range(0, number_of_trainings):
-            print("TREINO %d" % i)
-            error = training.train()
-            print("Erro: %s" % error)
+        '''for count in range(0, number_of_trainings):
+                print("Training Number %d" % count + 1)
+                print("Error %s" % training.train())'''
+        # above, use training with validation
+        training.trainUntilConvergence(maxEpochs=number_of_trainings, verbose=True, validationProportion=0.25)
 
     def test_network(self, test_base):
         # self.__network = NetworkReader.readFrom('filename.xml')
         test_base_length = len(test_base)
+        corrects = 0
+        errors = 0
         # ******************* PASSAR OS COMENTÁRIOS PARA O TESTE *********************
         for index in range(0, test_base_length):
             array = []
             # ********************** TROCAR PELO ARRAY DE ENTRADAS *******************
             entry_array = test_base[index][0]
-            # ********************** TROCAR PELO CLASSE ******************************
-            comment_class = test_base[index][1]
 
-            # print(entry_array, comment_class)
+            if test_base[index][1] >= 3.5:
+                comment_class = 0.99
+            else:
+                comment_class = 0.01
+
+                # print(entry_array, comment_class)
             for key in entry_array:
                 array.append(entry_array[key])
             try:
-                print(self.__network.activate(array), comment_class)
+                found = self.__network.activate(array)
+                if self.float_round(found, comment_class):
+                    corrects += 1
+                else:
+                    errors += 1
+                print(found, comment_class, self.float_round(found, comment_class))
             except (AssertionError, IndexError) as error:
                 print("Have an error message: %s" % error)
+        print("%f%%" % ((corrects * 100) / (errors + corrects)))
 
     def save_network(self, location):
         NetworkWriter.writeToFile(self.__network, location)

@@ -29,7 +29,7 @@ class NetworkTrainingController:
         self.__nn = NeuralNetwork(self.__bag_of_words.get_unique_words(), len(self.__training_set))
 
     def start_training(self):
-        self.__nn.training_network(self.__training_set, 50)
+        self.__nn.training_network(self.__training_set, 25)
 
     def test_neural_network(self):
         self.__nn.test_network(self.__test_set)

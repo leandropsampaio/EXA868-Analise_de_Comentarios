@@ -19,6 +19,7 @@ class BagOfWords:
         # Pegando as palavras (stopwords) da biblioteca
         self.stopwordsnltk = nltk.corpus.stopwords.words('portuguese')
         self.stopwordsnltk.append("é")
+        self.__one_time = None
 
     def __remove_accentuation(self, txt):
         return normalize('NFKD', txt).encode('ASCII', 'ignore').decode('ASCII')
@@ -75,10 +76,21 @@ class BagOfWords:
         words = nltk.FreqDist(words)
         return words
 
+    def _words_that_appear_just_few_times(self, words):
+        one_time = []
+        for word in words.keys():
+            if words[word] < 4:
+                one_time.append(word)
+        self.__one_time = tuple(one_time)
+
     # Através da quantidade de vezes e da palavra, esse método pega apenas as palavras ou seja as chaves da lista (Keys)
     def __search_unique_words(self, frequency):
-        frequency = frequency.keys()
-        return frequency
+        returned_frequency = []
+        frequency_keys = frequency.keys()
+        for word in frequency_keys:
+            if word not in self.__one_time:
+                returned_frequency.append(word)
+        return tuple(returned_frequency)
 
     # -------------------------------------- Extração das palavras de cada frase ---------------------------------------
 
@@ -101,6 +113,8 @@ class BagOfWords:
 
         self.__frequency = self.__search_frequency(words)
         # Mostra a quantidade de vezes que a palavra apareceu, junto com a palavra
+        # method to determines words to delete from unique words list
+        self._words_that_appear_just_few_times(self.__frequency)
 
         self.__unique_words = self.__search_unique_words(self.__frequency)
         # Imprime na tela as palavras sem repetição ou seja apenas uma vez cada palavra

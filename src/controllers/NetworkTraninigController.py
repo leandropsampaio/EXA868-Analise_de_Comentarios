@@ -1,5 +1,5 @@
 from models.business.BagOfWords import BagOfWords
-from models.business.DatabaseController import DatabaseController
+from controllers.DatabaseController import DatabaseController
 from models.business.NeuralNetwork import NeuralNetwork
 
 
@@ -26,10 +26,10 @@ class NetworkTrainingController:
 
     def create_neural_network(self):
         self.__split_base()
-        self.__nn = NeuralNetwork(self.__bag_of_words.get_unique_words(), len(self.__training_set))
+        self.__nn = NeuralNetwork(self.__bag_of_words.get_unique_words(), len(self.__training_set), 1)
 
     def start_training(self):
-        self.__nn.training_network(self.__training_set, 25)
+        self.__nn.training_network(self.__training_set, 35)
 
     def test_neural_network(self):
         self.__nn.test_network(self.__test_set)

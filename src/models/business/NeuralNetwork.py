@@ -10,7 +10,9 @@ from pybrain3.tools.xml.networkwriter import NetworkWriter
 
 
 class NeuralNetwork:
-    def __init__(self, unique_words, total_comments):
+    def __init__(self, unique_words, total_comments, hidden=400):
+        self._max_value = 0.9
+        self._min_value = 0.1
         self.__unique_words = unique_words
         self.__total_comments = total_comments
         self.__conversion_rate = 0.5
@@ -19,7 +21,7 @@ class NeuralNetwork:
 
         unique_words_length = len(self.__unique_words)
         # Construcao da rede com quantPalavrasUnicas na entradas, 1000 camadas ocultas e 1 sai­da
-        self.__network = buildNetwork(unique_words_length, 400, 1)
+        self.__network = buildNetwork(unique_words_length, hidden, 1)
         # Base de dados com quantPalavrasUnicas atributos prevzisores e uma clase
         self.__base = SupervisedDataSet(unique_words_length, 1)
         '''
@@ -31,14 +33,13 @@ class NeuralNetwork:
         print(self.__network['bias'])
         '''
 
-    @staticmethod
-    def float_round(number, close_to):
+    def float_round(self, number, close_to):
         """import math
         return math.isclose(float(number), close_to, abs_tol=0.45)"""
         if float(number) >= 0.5:
-            return 0.99 == close_to
+            return self._max_value == close_to
         else:
-            return 0.01 == close_to
+            return self._min_value == close_to
 
     def __add_training_set(self, training_base):
 
@@ -51,9 +52,9 @@ class NeuralNetwork:
                 entry_array = training_base[index][0]
 
                 if training_base[index][1] >= 3.5:
-                    comment_class = 0.99
+                    comment_class = self._max_value
                 else:
-                    comment_class = 0.01
+                    comment_class = self._min_value
 
                     # print(entry_array, comment_class)
                 for key in entry_array:
@@ -91,9 +92,9 @@ class NeuralNetwork:
             entry_array = test_base[index][0]
 
             if test_base[index][1] >= 3.5:
-                comment_class = 0.99
+                comment_class = self._max_value
             else:
-                comment_class = 0.01
+                comment_class = self._min_value
 
                 # print(entry_array, comment_class)
             for key in entry_array:

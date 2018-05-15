@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from models.business.ProxyScrapper import ProxyScrapper
-from models.business.DatabaseController import DatabaseController
+from controllers.DatabaseController import DatabaseController
 
 
 class WebScrapping:
